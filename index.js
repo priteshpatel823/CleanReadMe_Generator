@@ -145,9 +145,9 @@ async function init() {
             readMeArray.userPictureUrl = res.data.avatar_url;
 
             const readMeData = generateReadMe(readMeArray);
-            writeFile("README.md", readMeData);
+            writeFile("Example_README.md", readMeData);
         });
-        console.log("You Did it!! Check README.md");
+        console.log("You Did it!! Check Example_README.md");
     }
     catch (err) {
         console.log(err);
