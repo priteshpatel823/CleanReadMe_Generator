@@ -1,20 +1,23 @@
 const fs = require("fs");
+const axios = require("axios");
 const inquirer = require("inquirer");
-const questions = [
+const util = require("util");
+
+const writeFile = util.promisify(fs.writeFile);
+
+function promptUser() {
+    return inquirer.prompt([
         {
-            type: "input",
-            name: "projectTitle",
+            message: "Enter your GitHub username:",
+            name: "username"
+        },
+        {
             message: "Enter your project title:",
+            name: "title"
         },
         {
-            type: "input",
-            name: "description",
-            message: "Enter a description for your project: "
-        },
-        {
-            type: "input",
-            name: "installation",
-            message: "Enter your project's installation instructions:",
+            message: "Enter a description for your project:",
+            name: "description"
         },
         {
             type: "checkbox",
@@ -30,37 +33,124 @@ const questions = [
             ]
         },
         {
-            type: "input",
-            name: "usage",
-            message: "Enter your project's usage info:"
+            message: "Enter your project's acceptance criteria:",
+            name: "userAcceptanceCriteria"
         },
         {
-            type: "input",
-            name: "contribution",
-            message: "Enter your project's contributing information:"
+            message: "Enter your project's installation instructions:",
+            name: "installation"
         },
         {
-            type: "input",
-            name: "license",
-            message: "Enter your project's license information:"
+            message: "Enter your project's usage info:",
+            name: "usage"
         },
         {
-            type: "input",
-            name: "username",
-            message: "Enter your GitHub username: "
+            message: "Enter your project's credits information:",
+            name: "credits"
         },
         {
-            type: "input",
-            name: "email",
-            message: "Enter your email: "
+            message: "Enter your project's license information:",
+            name: "license"
+        },
+        {
+            message: "Enter your project's contributing information:",
+            name: "contributing"
+        },
+        {
+            message: "Enter your project's testing information:",
+            name: "tests"
         }
-    ]
-// function to start program
-function init() {
-    inquirer.prompt(questions)
-        .then(function(data) {
-            writeToFile("README.md", generateMarkdown(data));
-            console.log(data)
-        })
+    ])
+}
+
+function generateReadMe(data) {
+    return `# ${data.title}
+## Description
+${data.description}
+
+## Technology
+${data.technology}
+
+## Acceptance Criteria
+\`\`\`
+${data.userAcceptanceCriteria}
+\`\`\`
+
+## Table of Contents
+
+* [Installation](#installation)
+* [Usage](#usage)
+* [Technology](#technology)
+* [Credits](#credits)
+* [License](#license)
+
+## Installation
+${data.installation}
+
+## Usage
+${data.usage}
+
+## Credits
+${data.credits}
+
+## License
+${data.license}
+
+## Contributing
+${data.contributing}
+
+## Tests
+${data.tests}
+
+## Questions
+\`\`\`
+Email : ${data.userEmail}
+\`\`\`
+![Picture of me](${data.userPictureUrl})`;
+}
+const readMeArray = {
+    title: "",
+    description: "",
+    userAcceptanceCriteria: "",
+    installation: "",
+    usage: "",
+    technology: "",
+    credits: "",
+    license: "",
+    contributing: "",
+    tests: "",
+    userEmail: "",
+    userPictureUrl: ""
+};
+
+async function init() {
+    console.log("Begin:");
+    try {
+        const answer = await promptUser();
+
+        readMeArray.title = answer.title;
+        readMeArray.description = answer.description;
+        readMeArray.userAcceptanceCriteria = answer.userAcceptanceCriteria;
+        readMeArray.installation = answer.installation;
+        readMeArray.technology = answer.technology;
+        readMeArray.usage = answer.usage;
+        readMeArray.credits = answer.credits;
+        readMeArray.license = answer.license;
+        readMeArray.contributing = answer.contributing;
+        readMeArray.tests = answer.tests;
+
+        const queryUrl = `https://api.github.com/users/${answer.username}`;
+        axios.get(queryUrl).then(function (res) {
+            readMeArray.userEmail = res.data.email;
+            readMeArray.userPictureUrl = res.data.avatar_url;
+
+            const readMeData = generateReadMe(readMeArray);
+            writeFile("README.md", readMeData);
+        });
+        console.log("You Did it!! Check README.md");
+    }
+    catch (err) {
+        console.log(err);
+    }
 }
 init();
